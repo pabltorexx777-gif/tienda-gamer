@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tienda Gamer</title>
+</head>
+<body>
+
+  <h1>🎮 Tienda Gamer</h1>
+  <div id="productos"></div>
+
+  <script>
+    fetch('http://localhost:3000/products')
+      .then(res => res.json())
+      .then(data => {
+        const contenedor = document.getElementById('productos');
+
+        data.forEach(producto => {
+          const div = document.createElement('div');
+          div.innerHTML = `
+            <h3>${producto.nombre}</h3>
+            <p>Precio: $${producto.precio}</p>
+            <hr>
+          `;
+          contenedor.appendChild(div);
+        });
+      });
+  </script>
+
+</body>
+</html>
