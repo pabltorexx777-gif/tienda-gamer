@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react"
-
 import axios from "axios"
+import { Routes, Route, useNavigate } from "react-router-dom"
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaTrash } from "react-icons/fa"
 
-import {
-  Routes,
-  Route,
-  useNavigate
-} from "react-router-dom"
-
-import {
-  FaEnvelope,
-  FaLock,
-  FaEye,
-  FaEyeSlash,
-  FaTrash
-} from "react-icons/fa"
+const API = import.meta.env.VITE_API_URL
 
 function Login() {
 
@@ -26,841 +15,257 @@ function Login() {
   const [mensaje, setMensaje] = useState("")
 
   async function handleLogin(e) {
-
     e.preventDefault()
 
     try {
-
       const response = await axios.post(
-  `${import.meta.env.VITE_API_URL}/login`,
-  {
-    email,
-    password
-  }
-)
-
-      localStorage.setItem(
-        "token",
-        response.data.token
+        `${API}/login`,
+        { email, password }
       )
 
-      localStorage.setItem(
-        "usuario",
-        JSON.stringify(response.data.usuario)
-      )
+      localStorage.setItem("token", response.data.token)
+      localStorage.setItem("usuario", JSON.stringify(response.data.usuario))
 
       setMensaje("✅ Login correcto")
 
       setTimeout(() => {
-
         navigate("/dashboard")
-
-      }, 1000)
+      }, 800)
 
     } catch (error) {
-
       console.error(error)
-
       setMensaje("❌ Error al iniciar sesión")
-
     }
-
   }
 
   return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
 
-    <div className="
-      min-h-screen
-      bg-slate-950
-      flex
-      items-center
-      justify-center
-      px-4
-    ">
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-2xl w-full max-w-md shadow-2xl">
 
-      <div className="
-        bg-white/10
-        backdrop-blur-lg
-        border
-        border-white/20
-        p-8
-        rounded-2xl
-        w-full
-        max-w-md
-        shadow-2xl
-      ">
-
-        <h1 className="
-          text-white
-          text-3xl
-          font-bold
-          text-center
-          mb-6
-        ">
+        <h1 className="text-white text-3xl font-bold text-center mb-6">
           TIENDA GAMER
         </h1>
 
         <form onSubmit={handleLogin}>
 
           <div className="relative mb-4">
-
-            <FaEnvelope className="
-              absolute
-              left-3
-              top-4
-              text-gray-400
-            "/>
-
+            <FaEnvelope className="absolute left-3 top-4 text-gray-400" />
             <input
               type="email"
               placeholder="Correo electrónico"
               value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              className="
-                w-full
-                bg-slate-900
-                text-white
-                py-3
-                pl-10
-                pr-4
-                rounded-lg
-                outline-none
-                border
-                border-slate-700
-              "
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-slate-900 text-white py-3 pl-10 pr-4 rounded-lg outline-none border border-slate-700"
             />
-
           </div>
 
           <div className="relative mb-4">
-
-            <FaLock className="
-              absolute
-              left-3
-              top-4
-              text-gray-400
-            "/>
-
+            <FaLock className="absolute left-3 top-4 text-gray-400" />
             <input
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
+              type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
               value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              className="
-                w-full
-                bg-slate-900
-                text-white
-                py-3
-                pl-10
-                pr-12
-                rounded-lg
-                outline-none
-                border
-                border-slate-700
-              "
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-slate-900 text-white py-3 pl-10 pr-12 rounded-lg outline-none border border-slate-700"
             />
 
             <button
               type="button"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
-              className="
-                absolute
-                right-3
-                top-3
-                text-gray-400
-              "
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-gray-400"
             >
-
-              {
-                showPassword
-                  ? <FaEyeSlash />
-                  : <FaEye />
-              }
-
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
-
           </div>
 
-          <button
-            type="submit"
-            className="
-              w-full
-              bg-cyan-500
-              hover:bg-cyan-400
-              transition
-              text-black
-              font-bold
-              py-3
-              rounded-lg
-            "
-          >
+          <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded-lg">
             Iniciar sesión
           </button>
 
         </form>
 
-        {
-
-          mensaje && (
-
-            <p className="
-              text-center
-              mt-4
-              text-white
-            ">
-              {mensaje}
-            </p>
-
-          )
-
-        }
+        {mensaje && (
+          <p className="text-center mt-4 text-white">{mensaje}</p>
+        )}
 
       </div>
-
     </div>
-
   )
-
 }
 
 function Dashboard() {
 
-  if (!localStorage.getItem("token")) {
-  return <div>No autorizado</div>
-}
-
   const navigate = useNavigate()
 
-  
   const token = localStorage.getItem("token")
+  const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
 
-if (!token) {
-  return (
-    <div style={{ color: "white", padding: 20 }}>
-      Sesión expirada o no autorizada
-    </div>
-  )
-}
-  const usuario = JSON.parse(
-  localStorage.getItem("usuario") || "{}"
-  )
+  if (!token) {
+    return <div className="text-white p-5">Sesión expirada o no autorizada</div>
+  }
 
   const [productos, setProductos] = useState([])
-
   const [carrito, setCarrito] = useState(() => {
-  try {
-    return JSON.parse(localStorage.getItem("carrito") || "[]")
-  } catch {
-    return []
-  }
-})
+    try {
+      return JSON.parse(localStorage.getItem("carrito") || "[]")
+    } catch {
+      return []
+    }
+  })
 
   const [nombreProducto, setNombreProducto] = useState("")
   const [precioProducto, setPrecioProducto] = useState("")
   const [imagenProducto, setImagenProducto] = useState("")
 
   useEffect(() => {
-
     obtenerProductos()
-
   }, [])
 
   useEffect(() => {
-
-  localStorage.setItem(
-    "carrito",
-    JSON.stringify(carrito)
-  )
-
-}, [carrito])
+    localStorage.setItem("carrito", JSON.stringify(carrito))
+  }, [carrito])
 
   async function obtenerProductos() {
-
     try {
-
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/products`
-        `${import.meta.env.VITE_API_URL}/orders`
-      )
-
+      const response = await axios.get(`${API}/products`)
       setProductos(response.data)
-
     } catch (error) {
-
       console.error(error)
-
     }
-
   }
 
   async function agregarProducto(e) {
-
     e.preventDefault()
 
     try {
-
-      const token = localStorage.getItem("token")
-
       await axios.post(
-
-        "http://localhost:3000/products",
-
+        `${API}/products`,
         {
           nombre: nombreProducto,
           precio: precioProducto,
           imagen: imagenProducto
         },
-
         {
           headers: {
             Authorization: `Bearer ${token}`
           }
         }
-
       )
 
       setNombreProducto("")
       setPrecioProducto("")
       setImagenProducto("")
+      obtenerProductos()
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function eliminarProducto(id) {
+    try {
+      await axios.delete(`${API}/products/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
 
       obtenerProductos()
 
     } catch (error) {
-
       console.error(error)
-
     }
-
   }
 
-  async function eliminarProducto(id) {
+  function agregarAlCarrito(producto) {
+    setCarrito([...carrito, producto])
+  }
 
+  function eliminarDelCarrito(index) {
+    setCarrito(carrito.filter((_, i) => i !== index))
+  }
+
+  async function finalizarCompra() {
     try {
 
-      const token = localStorage.getItem("token")
+      if (carrito.length === 0) {
+        alert("El carrito está vacío")
+        return
+      }
 
-      await axios.delete(
-
-        `http://localhost:3000/products/${id}`,
-
+      await axios.post(
+        `${API}/orders`,
+        {
+          total,
+          items: carrito
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`
           }
         }
-
       )
 
-      obtenerProductos()
+      alert("Compra realizada correctamente")
+      setCarrito([])
 
     } catch (error) {
-
       console.error(error)
-
+      alert("❌ Error al realizar compra")
     }
-
   }
 
-  function agregarAlCarrito(producto) {
-
-    setCarrito([
-      ...carrito,
-      producto
-    ])
-
-  }
-
-  function eliminarDelCarrito(index) {
-
-    const nuevoCarrito =
-      carrito.filter((_, i) => i !== index)
-
-    setCarrito(nuevoCarrito)
-
-  }
-
-  async function finalizarCompra() {
-  try {
-    if (carrito.length === 0) {
-      alert("El carrito está vacío");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-
-    const response = await axios.post(
-      "http://localhost:3000/orders",
-      {
-        total: Number(total),
-        items: carrito   // 👈 ESTE ES EL CAMBIO CLAVE
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-
-    console.log(response.data);
-
-    alert("✅ Compra realizada correctamente");
-
-    setCarrito([]);
-
-  } catch (error) {
-    console.error(error);
-    console.log(error.response?.data);
-    alert("❌ Error al realizar compra");
-  }
-}
-
-
-  function cerrarSesion() {
-
-    localStorage.removeItem("token")
-    localStorage.removeItem("usuario")
-
-    navigate("/")
-
-  }
-
-  const total = carrito.reduce(
-
-  (acc, item) => {
-
-    return acc + Number(item.precio)
-
-  },
-
-  0
-
-).toFixed(2)
+  const total = carrito.reduce((acc, item) => acc + Number(item.precio), 0).toFixed(2)
 
   return (
+    <div className="min-h-screen bg-slate-950 text-white p-10">
 
-    <div className="
-      min-h-screen
-      bg-slate-950
-      text-white
-      p-10
-    ">
+      <div className="flex justify-between mb-10">
+        <h1 className="text-4xl font-bold">Dashboard 🎮</h1>
 
-      <button
-
-  onClick={finalizarCompra}
-
-  className="
-    w-full
-    mt-4
-    bg-green-500
-    hover:bg-green-400
-    text-black
-    font-bold
-    py-3
-    rounded-xl
-  "
->
-  Finalizar compra
-</button>
-
-      <div className="
-        flex
-        justify-between
-        items-center
-        mb-10
-      ">
-
-        <div>
-
-          <h1 className="
-            text-4xl
-            font-bold
-            mb-2
-          ">
-            Dashboard Gamer 🎮
-          </h1>
-
-          <p className="text-gray-400">
-            Bienvenido:
-            {" "}
-            {usuario?.nombre}
-          </p>
-
-          <p className="text-cyan-400">
-            Rol:
-            {" "}
-            {usuario?.rol}
-          </p>
-
-        </div>
-
-        <button
-          onClick={cerrarSesion}
-          className="
-            bg-red-500
-            hover:bg-red-400
-            px-4
-            py-2
-            rounded-lg
-            font-bold
-          "
-        >
+        <button onClick={() => {
+          localStorage.clear()
+          navigate("/")
+        }} className="bg-red-500 px-4 py-2 rounded">
           Cerrar sesión
         </button>
-
       </div>
 
-      {
+      <button onClick={finalizarCompra} className="w-full bg-green-500 py-3 rounded mb-6">
+        Finalizar compra
+      </button>
 
-        usuario?.rol === "admin" && (
+      <h2 className="text-2xl font-bold mb-4">Productos</h2>
 
-          <div className="
-            bg-slate-900
-            p-6
-            rounded-2xl
-            mb-10
-          ">
+      <div className="grid md:grid-cols-3 gap-4">
 
-            <h2 className="
-              text-2xl
-              font-bold
-              mb-4
-            ">
-              Panel Admin ⚙️
-            </h2>
+        {productos.map((p) => (
+          <div key={p.id} className="bg-slate-900 p-4 rounded">
 
-            <form
-              onSubmit={agregarProducto}
-              className="
-                grid
-                md:grid-cols-3
-                gap-4
-              "
-            >
+            <img src={p.imagen} className="h-40 w-full object-cover" />
 
-              <input
-                type="text"
-                placeholder="Nombre producto"
-                value={nombreProducto}
-                onChange={(e) =>
-                  setNombreProducto(e.target.value)
-                }
-                className="
-                  bg-slate-800
-                  p-3
-                  rounded-lg
-                  outline-none
-                "
-              />
+            <h3>{p.nombre}</h3>
+            <p>${p.precio}</p>
 
-              <input
-                type="number"
-                placeholder="Precio"
-                value={precioProducto}
-                onChange={(e) =>
-                  setPrecioProducto(e.target.value)
-                }
-                className="
-                  bg-slate-800
-                  p-3
-                  rounded-lg
-                  outline-none
-                "
-              />
-            <input
-  type="text"
-  placeholder="URL imagen"
-
-  value={imagenProducto}
-
-  onChange={(e) =>
-    setImagenProducto(e.target.value)
-  }
-
-  className="
-    bg-slate-800
-    p-3
-    rounded-lg
-    outline-none
-  "
-/>
-
-              <button
-                type="submit"
-                className="
-                  bg-green-500
-                  hover:bg-green-400
-                  text-black
-                  font-bold
-                  rounded-lg
-                "
-              >
-                Agregar producto
-              </button>
-
-            </form>
+            <button onClick={() => agregarAlCarrito(p)} className="bg-cyan-500 w-full mt-2">
+              Agregar
+            </button>
 
           </div>
-
-        )
-
-      }
-
-      <h2 className="
-        text-2xl
-        font-bold
-        mb-6
-      ">
-        Productos
-      </h2>
-
-      <div className="
-        grid
-        grid-cols-1
-        md:grid-cols-2
-        lg:grid-cols-3
-        gap-6
-      ">
-
-        {
-
-          productos.map((producto) => (
-
-            <div
-              key={producto.id}
-              className="
-                bg-slate-900
-                border
-                border-slate-800
-                rounded-2xl
-                p-6
-              "
-            >
-               <img
-
-  src={producto.imagen}
-
-  alt={producto.nombre}
-
-  className="
-    w-full
-    h-48
-    object-cover
-    rounded-xl
-    mb-4
-  "
-
-/>
-
-              <h3 className="
-                text-2xl
-                font-bold
-                mb-2
-              ">
-                {producto.nombre}
-              </h3>
-
-              <p className="
-                text-cyan-400
-                text-xl
-                mb-4
-              ">
-                ${producto.precio}
-              </p>
-
-              <button
-
-                onClick={() =>
-                  agregarAlCarrito(producto)
-                }
-
-                className="
-                  w-full
-                  bg-cyan-500
-                  hover:bg-cyan-400
-                  text-black
-                  font-bold
-                  py-2
-                  rounded-lg
-                "
-              >
-                Agregar al carrito
-              </button>
-
-              {
-
-                usuario?.rol === "admin" && (
-
-                  <button
-
-                    onClick={() =>
-                      eliminarProducto(producto.id)
-                    }
-
-                    className="
-                      w-full
-                      mt-3
-                      bg-red-500
-                      hover:bg-red-400
-                      text-white
-                      font-bold
-                      py-2
-                      rounded-lg
-                    "
-                  >
-                    Eliminar producto
-                  </button>
-
-                )
-
-              }
-
-            </div>
-
-          ))
-
-        }
-
-      </div>
-
-      <div className="mt-12">
-
-        <h2 className="
-          text-2xl
-          font-bold
-          mb-4
-        ">
-          Carrito 🛒
-        </h2>
-
-        {
-
-          carrito.length === 0
-
-          ? (
-
-            <p className="text-gray-400">
-              El carrito está vacío
-            </p>
-
-          )
-
-          : (
-
-            <div className="space-y-4">
-
-              {
-
-                carrito.map((item, index) => (
-
-                  <div
-
-                    key={index}
-
-                    className="
-                      bg-slate-900
-                      p-4
-                      rounded-xl
-                      flex
-                      justify-between
-                      items-center
-                    "
-                  >
-
-                    <div>
-
-                      <h3 className="font-bold">
-                        {item.nombre}
-                      </h3>
-
-                      <p className="text-cyan-400">
-                        ${item.precio}
-                      </p>
-
-                    </div>
-
-                    <button
-
-                      onClick={() =>
-                        eliminarDelCarrito(index)
-                      }
-
-                      className="
-                        bg-red-500
-                        hover:bg-red-400
-                        p-3
-                        rounded-lg
-                      "
-                    >
-
-                      <FaTrash />
-
-                    </button>
-
-                  </div>
-
-                ))
-
-              }
-
-              <div className="
-                bg-slate-800
-                p-4
-                rounded-xl
-                text-xl
-                font-bold
-              ">
-
-                Total:
-                {" "}
-                ${total}
-
-              </div>
-
-            </div>
-
-          )
-
-        }
+        ))}
 
       </div>
 
     </div>
-
   )
-
 }
 
-function App() {
-
+export default function App() {
   return (
-
     <Routes>
-
-      <Route
-        path="/"
-        element={<Login />}
-      />
-
-      <Route
-        path="/dashboard"
-        element={<Dashboard />}
-      />
-
+      <Route path="/" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
-
   )
-
 }
-
-export default App
