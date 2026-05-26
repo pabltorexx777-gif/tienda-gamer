@@ -131,7 +131,7 @@ function Dashboard() {
 
   async function obtenerProductos() {
     try {
-      const response = await axios.get(`${API}/products`)
+      const response = await axios.get(`${API}/api/products`)
       setProductos(response.data)
     } catch (error) {
       console.error(error)
