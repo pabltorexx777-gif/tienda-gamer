@@ -235,20 +235,20 @@ function Login() {
 
 function Dashboard() {
 
+  if (!localStorage.getItem("token")) {
+  return <div>No autorizado</div>
+}
+
   const navigate = useNavigate()
 
   const usuario = JSON.parse(
-    localStorage.getItem("usuario")
+  localStorage.getItem("usuario") || "{}"
   )
 
   const [productos, setProductos] = useState([])
 
   const [carrito, setCarrito] = useState(
-
-  JSON.parse(
-    localStorage.getItem("carrito")
-  ) || []
-
+  JSON.parse(localStorage.getItem("carrito") || "[]")
 )
 
   const [nombreProducto, setNombreProducto] = useState("")
