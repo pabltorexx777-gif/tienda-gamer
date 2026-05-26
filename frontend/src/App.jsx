@@ -15,28 +15,31 @@ function Login() {
   const [mensaje, setMensaje] = useState("")
 
   async function handleLogin(e) {
-    e.preventDefault()
+  e.preventDefault()
 
-    try {
-      const response = await axios.post(`${API}/login`, {
-        email,
-        password
-      })
+  try {
+    const response = await axios.post(`${API}/login`, {
+      email,
+      password
+    })
 
-      localStorage.setItem("token", response.data.token)
-      localStorage.setItem("usuario", JSON.stringify(response.data.user))
-
-      setMensaje("✅ Login correcto")
-
-      if (response.data.token) {
-           navigate("/dashboard")
-          }
-
-    } catch (error) {
-      console.error(error)
-      setMensaje("❌ Error al iniciar sesión")
+    if (!response.data || !response.data.token) {
+      setMensaje("❌ Credenciales incorrectas")
+      return
     }
+
+    localStorage.setItem("token", response.data.token)
+    localStorage.setItem("usuario", JSON.stringify(response.data.user))
+
+    setMensaje("✅ Login correcto")
+
+    navigate("/dashboard")
+
+  } catch (error) {
+    console.error(error)
+    setMensaje("❌ Error al iniciar sesión")
   }
+}
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
