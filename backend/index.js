@@ -4,7 +4,6 @@ const express = require('express')
 const cors = require('cors')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const path = require('path')
 
 const db = require('./db')
 
@@ -17,17 +16,13 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-/* =========================
-   LOGS
-========================= */
-
 app.use((req, res, next) => {
   console.log(req.method, req.url)
   next()
 })
 
 /* =========================
-   API
+   JWT
 ========================= */
 
 function verificarToken(req, res, next) {
@@ -43,10 +38,18 @@ function verificarToken(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     req.usuario = decoded
     next()
-  } catch {
+  } catch (err) {
     return res.status(403).json({ error: 'Token inválido' })
   }
 }
+
+/* =========================
+   HEALTH CHECK (IMPORTANTE EN RENDER)
+========================= */
+
+app.get('/', (req, res) => {
+  res.json({ ok: true, message: "API funcionando" })
+})
 
 /* =========================
    PRODUCTS
@@ -54,7 +57,10 @@ function verificarToken(req, res, next) {
 
 app.get('/api/products', (req, res) => {
   db.query('SELECT * FROM productos', (err, results) => {
-    if (err) return res.status(500).json({ error: err.message })
+    if (err) {
+      console.error(err)
+      return res.status(500).json({ error: err.message })
+    }
     res.json(results)
   })
 })
@@ -66,7 +72,11 @@ app.post('/api/products', verificarToken, (req, res) => {
     'INSERT INTO productos (nombre, precio, imagen) VALUES (?, ?, ?)',
     [nombre, precio, imagen],
     (err, result) => {
-      if (err) return res.status(500).json({ error: err.message })
+      if (err) {
+        console.error(err)
+        return res.status(500).json({ error: err.message })
+      }
+
       res.json({ ok: true, id: result.insertId })
     }
   )
@@ -84,7 +94,11 @@ app.post('/api/orders', verificarToken, (req, res) => {
     'INSERT INTO pedidos (usuario_id, total) VALUES (?, ?)',
     [usuario_id, total],
     (err, result) => {
-      if (err) return res.status(500).json({ error: err.message })
+      if (err) {
+        console.error(err)
+        return res.status(500).json({ error: err.message })
+      }
+
       res.json({ ok: true, pedidoId: result.insertId })
     }
   )
@@ -93,21 +107,6 @@ app.post('/api/orders', verificarToken, (req, res) => {
 /* =========================
    AUTH
 ========================= */
-
-app.post('/register', async (req, res) => {
-  const { nombre, email, password } = req.body
-
-  const hash = await bcrypt.hash(password, 10)
-
-  db.query(
-    'INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)',
-    [nombre, email, hash],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message })
-      res.json({ mensaje: 'Usuario registrado' })
-    }
-  )
-})
 
 app.post('/login', (req, res) => {
   const { email, password } = req.body
@@ -137,8 +136,24 @@ app.post('/login', (req, res) => {
   )
 })
 
+app.post('/register', async (req, res) => {
+  const { nombre, email, password } = req.body
+
+  const hash = await bcrypt.hash(password, 10)
+
+  db.query(
+    'INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)',
+    [nombre, email, hash],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message })
+
+      res.json({ mensaje: 'Usuario registrado' })
+    }
+  )
+})
+
 /* =========================
-   SERVE (SOLO SI USAS BUILD)
+   START SERVER
 ========================= */
 
 const PORT = process.env.PORT || 3000
