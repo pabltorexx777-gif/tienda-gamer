@@ -248,7 +248,11 @@ app.get('/products', (req, res) => {
 // Agregar producto
 app.post('/products', verificarToken, (req, res) => {
 
-  const { nombre, precio } = req.body;
+  const {
+    nombre,
+    precio,
+    imagen
+  } = req.body;
 
   if (!nombre || !precio) {
 
@@ -259,28 +263,44 @@ app.post('/products', verificarToken, (req, res) => {
   }
 
   const sql = `
-    INSERT INTO productos (nombre, precio)
-    VALUES (?, ?)
+    INSERT INTO productos (
+      nombre,
+      precio,
+      imagen
+    )
+    VALUES (?, ?, ?)
   `;
 
-  db.query(sql, [nombre, precio], (err, result) => {
+  db.query(
 
-    if (err) {
+    sql,
 
-      console.error(err);
+    [
+      nombre,
+      precio,
+      imagen
+    ],
 
-      return res.status(500).json({
-        error: 'Error al agregar producto'
+    (err, result) => {
+
+      if (err) {
+
+        console.error(err);
+
+        return res.status(500).json({
+          error: 'Error al agregar producto'
+        });
+
+      }
+
+      res.status(201).json({
+        mensaje: 'Producto agregado correctamente',
+        id: result.insertId
       });
 
     }
 
-    res.status(201).json({
-      mensaje: 'Producto agregado correctamente',
-      id: result.insertId
-    });
-
-  });
+  );
 
 });
 
