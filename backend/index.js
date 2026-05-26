@@ -13,7 +13,9 @@ const app = express();
    MIDDLEWARES GLOBALES
 =================================================== */
 
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
 app.use(express.json());
 
 // 🔥 LOG DE REQUESTS (DEBE IR DESPUÉS DE app)
@@ -225,8 +227,6 @@ app.post('/products', verificarToken, (req, res) => {
 app.post('/orders', verificarToken, (req, res) => {
 
   console.log("🔥 ORDERS CON TOKEN EJECUTADO");
-  console.log("USER:", req.usuario);
-  console.log("BODY:", req.body);
 
   const { total, items } = req.body;
   const usuario_id = req.usuario.id;
@@ -239,11 +239,9 @@ app.post('/orders', verificarToken, (req, res) => {
   db.query(sql, [usuario_id, total], (err, result) => {
 
     if (err) {
-      console.error("❌ ERROR SQL:", err);
+      console.error(err);
       return res.status(500).json({ error: err.message });
     }
-
-    console.log("✅ PEDIDO GUARDADO:", result);
 
     res.json({
       ok: true,
