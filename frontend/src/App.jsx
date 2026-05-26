@@ -241,15 +241,29 @@ function Dashboard() {
 
   const navigate = useNavigate()
 
+  
+  const token = localStorage.getItem("token")
+
+if (!token) {
+  return (
+    <div style={{ color: "white", padding: 20 }}>
+      Sesión expirada o no autorizada
+    </div>
+  )
+}
   const usuario = JSON.parse(
   localStorage.getItem("usuario") || "{}"
   )
 
   const [productos, setProductos] = useState([])
 
-  const [carrito, setCarrito] = useState(
-  JSON.parse(localStorage.getItem("carrito") || "[]")
-)
+  const [carrito, setCarrito] = useState(() => {
+  try {
+    return JSON.parse(localStorage.getItem("carrito") || "[]")
+  } catch {
+    return []
+  }
+})
 
   const [nombreProducto, setNombreProducto] = useState("")
   const [precioProducto, setPrecioProducto] = useState("")
