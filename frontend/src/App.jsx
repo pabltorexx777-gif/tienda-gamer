@@ -32,12 +32,12 @@ function Login() {
     try {
 
       const response = await axios.post(
-        "http://localhost:3000/login",
-        {
-          email,
-          password
-        }
-      )
+  `${import.meta.env.VITE_API_URL}/login`,
+  {
+    email,
+    password
+  }
+)
 
       localStorage.setItem(
         "token",
@@ -275,7 +275,8 @@ function Dashboard() {
     try {
 
       const response = await axios.get(
-        "http://localhost:3000/products"
+        `${import.meta.env.VITE_API_URL}/products`
+        `${import.meta.env.VITE_API_URL}/orders`
       )
 
       setProductos(response.data)
@@ -375,63 +376,40 @@ function Dashboard() {
   }
 
   async function finalizarCompra() {
-
   try {
-
     if (carrito.length === 0) {
-
-      alert("El carrito está vacío")
-
-      return
-
+      alert("El carrito está vacío");
+      return;
     }
 
-    const token = localStorage.getItem("token")
-
-    console.log("TOKEN:", token)
-
-    console.log("TOTAL:", total)
+    const token = localStorage.getItem("token");
 
     const response = await axios.post(
-
       "http://localhost:3000/orders",
-
       {
-        total: parseFloat(total)
+        total: Number(total),
+        items: carrito   // 👈 ESTE ES EL CAMBIO CLAVE
       },
-
       {
         headers: {
-
-          Authorization: `Bearer ${token}`,
-
-          "Content-Type": "application/json"
-
+          Authorization: `Bearer ${token}`
         }
       }
+    );
 
-    )
+    console.log(response.data);
 
-    console.log(response.data)
+    alert("✅ Compra realizada correctamente");
 
-    alert("✅ Compra realizada correctamente")
-
-    setCarrito([])
+    setCarrito([]);
 
   } catch (error) {
-
-    console.error(error)
-
-    console.log(
-      "ERROR BACKEND:",
-      error.response?.data
-    )
-
-    alert("❌ Error al realizar compra")
-
+    console.error(error);
+    console.log(error.response?.data);
+    alert("❌ Error al realizar compra");
   }
-
 }
+
 
   function cerrarSesion() {
 
