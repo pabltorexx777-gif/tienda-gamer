@@ -28,7 +28,9 @@ function Login() {
 
       setMensaje("✅ Login correcto")
 
-      setTimeout(() => navigate("/dashboard"), 800)
+      if (response.data.token) {
+           navigate("/dashboard")
+          }
 
     } catch (error) {
       console.error(error)
@@ -73,6 +75,13 @@ function Login() {
 }
 
 function Dashboard() {
+  useEffect(() => {
+  const token = localStorage.getItem("token")
+
+  if (!token) {
+    navigate("/")
+  }
+}, [])
   const navigate = useNavigate()
 
   const token = localStorage.getItem("token")
@@ -90,9 +99,11 @@ function Dashboard() {
     localStorage.setItem("carrito", JSON.stringify(carrito))
   }, [carrito])
 
+  useEffect(() => {
   if (!token) {
-    return <div className="text-white p-5">Sesión no válida</div>
+    navigate("/")
   }
+}, [])
 
   async function obtenerProductos() {
     try {
