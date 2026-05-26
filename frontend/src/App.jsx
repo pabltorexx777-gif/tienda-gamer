@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { Routes, Route, useNavigate } from "react-router-dom"
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaTrash } from "react-icons/fa"
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3000"
+const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
 
 function Login() {
-
   const navigate = useNavigate()
 
   const [email, setEmail] = useState("")
@@ -18,19 +17,17 @@ function Login() {
     e.preventDefault()
 
     try {
-      const response = await axios.post(
-        `${API}/login`,
-        { email, password }
-      )
+      const response = await axios.post(`${API}/login`, {
+        email,
+        password
+      })
 
       localStorage.setItem("token", response.data.token)
-      localStorage.setItem("usuario", JSON.stringify(response.data.usuario))
+      localStorage.setItem("usuario", JSON.stringify(response.data.user))
 
       setMensaje("✅ Login correcto")
 
-      setTimeout(() => {
-        navigate("/dashboard")
-      }, 800)
+      setTimeout(() => navigate("/dashboard"), 800)
 
     } catch (error) {
       console.error(error)
@@ -40,7 +37,6 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-
       <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-2xl w-full max-w-md shadow-2xl">
 
         <h1 className="text-white text-3xl font-bold text-center mb-6">
@@ -48,7 +44,6 @@ function Login() {
         </h1>
 
         <form onSubmit={handleLogin}>
-
           <div className="relative mb-4">
             <FaEnvelope className="absolute left-3 top-4 text-gray-400" />
             <input
@@ -82,33 +77,33 @@ function Login() {
           <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded-lg">
             Iniciar sesión
           </button>
-
         </form>
 
         {mensaje && (
           <p className="text-center mt-4 text-white">{mensaje}</p>
         )}
-
       </div>
     </div>
   )
 }
 
 function Dashboard() {
-
   const navigate = useNavigate()
 
   const token = localStorage.getItem("token")
-  const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
 
-  if (!token) {
-    return <div className="text-white p-5">Sesión expirada o no autorizada</div>
-  }
+  const usuario = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("usuario")) || {}
+    } catch {
+      return {}
+    }
+  })()
 
   const [productos, setProductos] = useState([])
   const [carrito, setCarrito] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("carrito") || "[]")
+      return JSON.parse(localStorage.getItem("carrito")) || []
     } catch {
       return []
     }
@@ -125,6 +120,14 @@ function Dashboard() {
   useEffect(() => {
     localStorage.setItem("carrito", JSON.stringify(carrito))
   }, [carrito])
+
+  if (!token) {
+    return (
+      <div className="text-white p-5">
+        Sesión expirada o no autorizada
+      </div>
+    )
+  }
 
   async function obtenerProductos() {
     try {
@@ -186,9 +189,12 @@ function Dashboard() {
     setCarrito(carrito.filter((_, i) => i !== index))
   }
 
+  const total = carrito
+    .reduce((acc, item) => acc + Number(item.precio), 0)
+    .toFixed(2)
+
   async function finalizarCompra() {
     try {
-
       if (carrito.length === 0) {
         alert("El carrito está vacío")
         return
@@ -196,10 +202,7 @@ function Dashboard() {
 
       await axios.post(
         `${API}/orders`,
-        {
-          total,
-          items: carrito
-        },
+        { total },
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -216,47 +219,48 @@ function Dashboard() {
     }
   }
 
-  const total = carrito.reduce((acc, item) => acc + Number(item.precio), 0).toFixed(2)
-
   return (
     <div className="min-h-screen bg-slate-950 text-white p-10">
 
       <div className="flex justify-between mb-10">
         <h1 className="text-4xl font-bold">Dashboard 🎮</h1>
 
-        <button onClick={() => {
-          localStorage.clear()
-          navigate("/")
-        }} className="bg-red-500 px-4 py-2 rounded">
+        <button
+          onClick={() => {
+            localStorage.clear()
+            navigate("/")
+          }}
+          className="bg-red-500 px-4 py-2 rounded"
+        >
           Cerrar sesión
         </button>
       </div>
 
-      <button onClick={finalizarCompra} className="w-full bg-green-500 py-3 rounded mb-6">
+      <button
+        onClick={finalizarCompra}
+        className="w-full bg-green-500 py-3 rounded mb-6"
+      >
         Finalizar compra
       </button>
 
       <h2 className="text-2xl font-bold mb-4">Productos</h2>
 
       <div className="grid md:grid-cols-3 gap-4">
-
         {productos.map((p) => (
           <div key={p.id} className="bg-slate-900 p-4 rounded">
-
             <img src={p.imagen} className="h-40 w-full object-cover" />
-
             <h3>{p.nombre}</h3>
             <p>${p.precio}</p>
 
-            <button onClick={() => agregarAlCarrito(p)} className="bg-cyan-500 w-full mt-2">
+            <button
+              onClick={() => agregarAlCarrito(p)}
+              className="bg-cyan-500 w-full mt-2"
+            >
               Agregar
             </button>
-
           </div>
         ))}
-
       </div>
-
     </div>
   )
 }
