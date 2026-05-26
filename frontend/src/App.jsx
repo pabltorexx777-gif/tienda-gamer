@@ -3,6 +3,7 @@ import axios from "axios"
 import { Routes, Route, useNavigate } from "react-router-dom"
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaTrash } from "react-icons/fa"
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:3000"
 const API = import.meta.env.VITE_API_URL
 
 function Login() {
