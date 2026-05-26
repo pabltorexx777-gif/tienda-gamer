@@ -13,7 +13,10 @@ const app = express()
    MIDDLEWARE
 ========================= */
 
-app.use(cors())
+app.use(cors({
+  origin: "*"
+}))
+
 app.use(express.json())
 
 app.use((req, res, next) => {
@@ -22,7 +25,7 @@ app.use((req, res, next) => {
 })
 
 /* =========================
-   JWT
+   JWT MIDDLEWARE
 ========================= */
 
 function verificarToken(req, res, next) {
@@ -44,7 +47,7 @@ function verificarToken(req, res, next) {
 }
 
 /* =========================
-   HEALTH CHECK (IMPORTANTE EN RENDER)
+   HEALTH CHECK
 ========================= */
 
 app.get('/', (req, res) => {
@@ -57,10 +60,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/products', (req, res) => {
   db.query('SELECT * FROM productos', (err, results) => {
-    if (err) {
-      console.error(err)
-      return res.status(500).json({ error: err.message })
-    }
+    if (err) return res.status(500).json({ error: err.message })
     res.json(results)
   })
 })
@@ -72,12 +72,19 @@ app.post('/api/products', verificarToken, (req, res) => {
     'INSERT INTO productos (nombre, precio, imagen) VALUES (?, ?, ?)',
     [nombre, precio, imagen],
     (err, result) => {
-      if (err) {
-        console.error(err)
-        return res.status(500).json({ error: err.message })
-      }
-
+      if (err) return res.status(500).json({ error: err.message })
       res.json({ ok: true, id: result.insertId })
+    }
+  )
+})
+
+app.delete('/api/products/:id', verificarToken, (req, res) => {
+  db.query(
+    'DELETE FROM productos WHERE id = ?',
+    [req.params.id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message })
+      res.json({ ok: true })
     }
   )
 })
@@ -88,17 +95,12 @@ app.post('/api/products', verificarToken, (req, res) => {
 
 app.post('/api/orders', verificarToken, (req, res) => {
   const { total } = req.body
-  const usuario_id = req.usuario.id
 
   db.query(
     'INSERT INTO pedidos (usuario_id, total) VALUES (?, ?)',
-    [usuario_id, total],
+    [req.usuario.id, total],
     (err, result) => {
-      if (err) {
-        console.error(err)
-        return res.status(500).json({ error: err.message })
-      }
-
+      if (err) return res.status(500).json({ error: err.message })
       res.json({ ok: true, pedidoId: result.insertId })
     }
   )
@@ -117,7 +119,7 @@ app.post('/login', (req, res) => {
     async (err, results) => {
       if (err) return res.status(500).json({ error: err.message })
       if (results.length === 0)
-        return res.status(401).json({ error: 'No existe' })
+        return res.status(401).json({ error: 'No existe usuario' })
 
       const user = results[0]
 
@@ -146,14 +148,28 @@ app.post('/register', async (req, res) => {
     [nombre, email, hash],
     (err) => {
       if (err) return res.status(500).json({ error: err.message })
-
       res.json({ mensaje: 'Usuario registrado' })
     }
   )
 })
 
 /* =========================
-   START SERVER
+   USER INFO (ADMIN FIX)
+========================= */
+
+app.get('/api/me', verificarToken, (req, res) => {
+  db.query(
+    'SELECT id, nombre, email FROM usuarios WHERE id = ?',
+    [req.usuario.id],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: err.message })
+      res.json(results[0])
+    }
+  )
+})
+
+/* =========================
+   SERVER
 ========================= */
 
 const PORT = process.env.PORT || 3000
