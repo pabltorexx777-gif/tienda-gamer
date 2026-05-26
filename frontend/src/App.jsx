@@ -3,7 +3,8 @@ import axios from "axios"
 import { Routes, Route, useNavigate } from "react-router-dom"
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+// 🔥 FIX IMPORTANTE: siempre apuntar a /api
+const API = import.meta.env.VITE_API_URL || "https://tienda-gamer-1.onrender.com/api"
 
 function Login() {
   const navigate = useNavigate()
@@ -44,44 +45,28 @@ function Login() {
         </h1>
 
         <form onSubmit={handleLogin}>
-          <div className="relative mb-4">
-            <FaEnvelope className="absolute left-3 top-4 text-gray-400" />
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-900 text-white py-3 pl-10 pr-4 rounded-lg outline-none border border-slate-700"
-            />
-          </div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Correo"
+            className="w-full mb-3 p-2"
+          />
 
-          <div className="relative mb-4">
-            <FaLock className="absolute left-3 top-4 text-gray-400" />
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-900 text-white py-3 pl-10 pr-12 rounded-lg outline-none border border-slate-700"
-            />
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Contraseña"
+            className="w-full mb-3 p-2"
+          />
 
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-gray-400"
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          </div>
-
-          <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded-lg">
+          <button className="w-full bg-cyan-500 py-2">
             Iniciar sesión
           </button>
         </form>
 
-        {mensaje && (
-          <p className="text-center mt-4 text-white">{mensaje}</p>
-        )}
+        {mensaje && <p className="text-white mt-3">{mensaje}</p>}
       </div>
     </div>
   )
@@ -92,26 +77,10 @@ function Dashboard() {
 
   const token = localStorage.getItem("token")
 
-  const usuario = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("usuario")) || {}
-    } catch {
-      return {}
-    }
-  })()
-
   const [productos, setProductos] = useState([])
   const [carrito, setCarrito] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("carrito")) || []
-    } catch {
-      return []
-    }
+    return JSON.parse(localStorage.getItem("carrito")) || []
   })
-
-  const [nombreProducto, setNombreProducto] = useState("")
-  const [precioProducto, setPrecioProducto] = useState("")
-  const [imagenProducto, setImagenProducto] = useState("")
 
   useEffect(() => {
     obtenerProductos()
@@ -122,60 +91,13 @@ function Dashboard() {
   }, [carrito])
 
   if (!token) {
-    return (
-      <div className="text-white p-5">
-        Sesión expirada o no autorizada
-      </div>
-    )
+    return <div className="text-white p-5">Sesión no válida</div>
   }
 
   async function obtenerProductos() {
     try {
-      const response = await axios.get(`${API}/api/products`)
+      const response = await axios.get(`${API}/products`)
       setProductos(response.data)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  async function agregarProducto(e) {
-    e.preventDefault()
-
-    try {
-      await axios.post(
-        `${API}/products`,
-        {
-          nombre: nombreProducto,
-          precio: precioProducto,
-          imagen: imagenProducto
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      )
-
-      setNombreProducto("")
-      setPrecioProducto("")
-      setImagenProducto("")
-      obtenerProductos()
-
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  async function eliminarProducto(id) {
-    try {
-      await axios.delete(`${API}/products/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-
-      obtenerProductos()
-
     } catch (error) {
       console.error(error)
     }
@@ -185,37 +107,24 @@ function Dashboard() {
     setCarrito([...carrito, producto])
   }
 
-  function eliminarDelCarrito(index) {
-    setCarrito(carrito.filter((_, i) => i !== index))
-  }
-
   const total = carrito
     .reduce((acc, item) => acc + Number(item.precio), 0)
     .toFixed(2)
 
   async function finalizarCompra() {
     try {
-      if (carrito.length === 0) {
-        alert("El carrito está vacío")
-        return
-      }
-
-      await axios.post(
-        `${API}/orders`,
-        { total },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+      await axios.post(`${API}/orders`, { total }, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      )
+      })
 
-      alert("Compra realizada correctamente")
+      alert("Compra realizada")
       setCarrito([])
 
     } catch (error) {
       console.error(error)
-      alert("❌ Error al realizar compra")
+      alert("Error al realizar compra")
     }
   }
 
@@ -230,32 +139,23 @@ function Dashboard() {
             localStorage.clear()
             navigate("/")
           }}
-          className="bg-red-500 px-4 py-2 rounded"
         >
           Cerrar sesión
         </button>
       </div>
 
-      <button
-        onClick={finalizarCompra}
-        className="w-full bg-green-500 py-3 rounded mb-6"
-      >
+      <button onClick={finalizarCompra}>
         Finalizar compra
       </button>
 
-      <h2 className="text-2xl font-bold mb-4">Productos</h2>
-
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-3 gap-4 mt-6">
         {productos.map((p) => (
-          <div key={p.id} className="bg-slate-900 p-4 rounded">
-            <img src={p.imagen} className="h-40 w-full object-cover" />
+          <div key={p.id} className="bg-slate-900 p-4">
+            <img src={p.imagen} />
             <h3>{p.nombre}</h3>
             <p>${p.precio}</p>
 
-            <button
-              onClick={() => agregarAlCarrito(p)}
-              className="bg-cyan-500 w-full mt-2"
-            >
+            <button onClick={() => agregarAlCarrito(p)}>
               Agregar
             </button>
           </div>
