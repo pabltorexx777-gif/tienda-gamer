@@ -1,13 +1,28 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const db = require('./db');
 
 const app = express();
 
-const db = require('./db');
+/* ===================================================
+   MIDDLEWARES GLOBALES
+=================================================== */
+
+app.use(cors());
+app.use(express.json());
+
+// 🔥 LOG DE REQUESTS (DEBE IR DESPUÉS DE app)
+app.use((req, res, next) => {
+  console.log("REQUEST:", req.method, req.url);
+  next();
+});
+
+console.log("🔥 BACKEND CARGADO - INDEX.JS ACTIVO");
 
 /* ===================================================
    MIDDLEWARE JWT
@@ -17,25 +32,17 @@ function verificarToken(req, res, next) {
 
   const authHeader = req.headers.authorization;
 
-  // Verificar si existe token
   if (!authHeader) {
-
     return res.status(401).json({
       error: 'Token requerido'
     });
-
   }
 
-  // Formato: Bearer TOKEN
   const token = authHeader.split(' ')[1];
 
   try {
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.usuario = decoded;
 
     next();
@@ -47,23 +54,14 @@ function verificarToken(req, res, next) {
     });
 
   }
-
 }
-
-// Middlewares
-app.use(cors());
-app.use(express.json());
 
 /* ===================================================
    RUTA PRINCIPAL
 =================================================== */
 
 app.get('/', (req, res) => {
-
-  res.json({
-    mensaje: 'Servidor funcionando 🚀'
-  });
-
+  res.json({ mensaje: 'Servidor funcionando 🚀' });
 });
 
 /* ===================================================
@@ -74,18 +72,14 @@ app.post('/register', async (req, res) => {
 
   const { nombre, email, password } = req.body;
 
-  // Validar campos
   if (!nombre || !email || !password) {
-
     return res.status(400).json({
       error: 'Todos los campos son obligatorios'
     });
-
   }
 
   try {
 
-    // Encriptar password
     const passwordHash = await bcrypt.hash(password, 10);
 
     const sql = `
@@ -93,16 +87,13 @@ app.post('/register', async (req, res) => {
       VALUES (?, ?, ?)
     `;
 
-    db.query(sql, [nombre, email, passwordHash], (err, result) => {
+    db.query(sql, [nombre, email, passwordHash], (err) => {
 
       if (err) {
-
         console.error(err);
-
         return res.status(500).json({
           error: 'Error al registrar usuario'
         });
-
       }
 
       res.status(201).json({
@@ -131,87 +122,52 @@ app.post('/login', (req, res) => {
 
   const { email, password } = req.body;
 
-  // Validar campos
   if (!email || !password) {
-
     return res.status(400).json({
       error: 'Todos los campos son obligatorios'
     });
-
   }
 
-  const sql = `
-    SELECT * FROM usuarios
-    WHERE email = ?
-  `;
+  const sql = `SELECT * FROM usuarios WHERE email = ?`;
 
   db.query(sql, [email], async (err, results) => {
 
     if (err) {
-
       console.error(err);
-
-      return res.status(500).json({
-        error: 'Error del servidor'
-      });
-
+      return res.status(500).json({ error: 'Error del servidor' });
     }
 
-    // Usuario no existe
     if (results.length === 0) {
-
-      return res.status(401).json({
-        error: 'Usuario no encontrado'
-      });
-
+      return res.status(401).json({ error: 'Usuario no encontrado' });
     }
 
     const usuario = results[0];
 
-    // Comparar password
-    const passwordCorrecta = await bcrypt.compare(
-      password,
-      usuario.password
-    );
+    const passwordCorrecta = await bcrypt.compare(password, usuario.password);
 
     if (!passwordCorrecta) {
-
-      return res.status(401).json({
-        error: 'Contraseña incorrecta'
-      });
-
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
-    // Generar token
     const token = jwt.sign(
-
       {
         id: usuario.id,
         email: usuario.email,
         rol: usuario.rol
       },
-
       process.env.JWT_SECRET,
-
-      {
-        expiresIn: '24h'
-      }
-
+      { expiresIn: '24h' }
     );
 
     res.json({
-
       mensaje: 'Login correcto',
-
       token,
-
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
         rol: usuario.rol
       }
-
     });
 
   });
@@ -222,21 +178,13 @@ app.post('/login', (req, res) => {
    PRODUCTOS
 =================================================== */
 
-// Obtener productos
 app.get('/products', (req, res) => {
 
-  const sql = 'SELECT * FROM productos';
-
-  db.query(sql, (err, results) => {
+  db.query('SELECT * FROM productos', (err, results) => {
 
     if (err) {
-
       console.error(err);
-
-      return res.status(500).json({
-        error: 'Error al obtener productos'
-      });
-
+      return res.status(500).json({ error: 'Error al obtener productos' });
     }
 
     res.json(results);
@@ -245,127 +193,61 @@ app.get('/products', (req, res) => {
 
 });
 
-// Agregar producto
 app.post('/products', verificarToken, (req, res) => {
 
-  const {
-    nombre,
-    precio,
-    imagen
-  } = req.body;
-
-  if (!nombre || !precio) {
-
-    return res.status(400).json({
-      error: 'Nombre y precio son obligatorios'
-    });
-
-  }
+  const { nombre, precio, imagen } = req.body;
 
   const sql = `
-    INSERT INTO productos (
-      nombre,
-      precio,
-      imagen
-    )
+    INSERT INTO productos (nombre, precio, imagen)
     VALUES (?, ?, ?)
   `;
 
-  db.query(
-
-    sql,
-
-    [
-      nombre,
-      precio,
-      imagen
-    ],
-
-    (err, result) => {
-
-      if (err) {
-
-        console.error(err);
-
-        return res.status(500).json({
-          error: 'Error al agregar producto'
-        });
-
-      }
-
-      res.status(201).json({
-        mensaje: 'Producto agregado correctamente',
-        id: result.insertId
-      });
-
-    }
-
-  );
-
-});
-
-// Editar producto
-app.put('/products/:id', verificarToken, (req, res) => {
-
-  const { id } = req.params;
-
-  const { nombre, precio } = req.body;
-
-  if (!nombre || !precio) {
-
-    return res.status(400).json({
-      error: 'Nombre y precio son obligatorios'
-    });
-
-  }
-
-  const sql = `
-    UPDATE productos
-    SET nombre = ?, precio = ?
-    WHERE id = ?
-  `;
-
-  db.query(sql, [nombre, precio, id], (err, result) => {
+  db.query(sql, [nombre, precio, imagen], (err, result) => {
 
     if (err) {
-
       console.error(err);
-
-      return res.status(500).json({
-        error: 'Error al actualizar producto'
-      });
-
+      return res.status(500).json({ error: 'Error al agregar producto' });
     }
 
-    res.json({
-      mensaje: 'Producto actualizado correctamente'
+    res.status(201).json({
+      mensaje: 'Producto agregado correctamente',
+      id: result.insertId
     });
 
   });
 
 });
 
-// Eliminar producto
-app.delete('/products/:id', verificarToken, (req, res) => {
+/* ===================================================
+   ORDERS
+=================================================== */
 
-  const { id } = req.params;
+app.post('/orders', verificarToken, (req, res) => {
 
-  const sql = 'DELETE FROM productos WHERE id = ?';
+  console.log("🔥 ORDERS CON TOKEN EJECUTADO");
+  console.log("USER:", req.usuario);
+  console.log("BODY:", req.body);
 
-  db.query(sql, [id], (err, result) => {
+  const { total, items } = req.body;
+  const usuario_id = req.usuario.id;
+
+  const sql = `
+    INSERT INTO pedidos (usuario_id, total)
+    VALUES (?, ?)
+  `;
+
+  db.query(sql, [usuario_id, total], (err, result) => {
 
     if (err) {
-
-      console.error(err);
-
-      return res.status(500).json({
-        error: 'Error al eliminar producto'
-      });
-
+      console.error("❌ ERROR SQL:", err);
+      return res.status(500).json({ error: err.message });
     }
 
+    console.log("✅ PEDIDO GUARDADO:", result);
+
     res.json({
-      mensaje: 'Producto eliminado correctamente'
+      ok: true,
+      pedidoId: result.insertId
     });
 
   });
@@ -379,7 +261,5 @@ app.delete('/products/:id', verificarToken, (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-
 });

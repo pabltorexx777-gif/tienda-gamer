@@ -388,17 +388,25 @@ function Dashboard() {
 
     const token = localStorage.getItem("token")
 
+    console.log("TOKEN:", token)
+
+    console.log("TOTAL:", total)
+
     const response = await axios.post(
 
       "http://localhost:3000/orders",
 
       {
-        total: Number(total)
+        total: parseFloat(total)
       },
 
       {
         headers: {
-          Authorization: `Bearer ${token}`
+
+          Authorization: `Bearer ${token}`,
+
+          "Content-Type": "application/json"
+
         }
       }
 
@@ -414,14 +422,16 @@ function Dashboard() {
 
     console.error(error)
 
-    console.log(error.response?.data)
+    console.log(
+      "ERROR BACKEND:",
+      error.response?.data
+    )
 
     alert("❌ Error al realizar compra")
 
   }
 
 }
-
 
   function cerrarSesion() {
 
